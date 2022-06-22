@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/CueEpicMusic/tinyapp/issues"
   },
-  "homepage": "https://github.com/CueEpicMusic/tinyapp#readme"
+  "homepage": "https://github.com/CueEpicMusic/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
