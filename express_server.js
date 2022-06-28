@@ -9,10 +9,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //View engine
 app.set("view engine", "ejs");
 
+//Random string generator function
 const generateRandomString = () => {
-  let r = (Math.random().toString(36).substring(2,8));
+  let r = Math.random().toString(36).substring(2, 8);
   return r;
-}
+};
+
+//Port
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -46,19 +52,21 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
-  const longURL = urlDatabase[shortURL]
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
 });
 
 //Post
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString()
-  const longURL = req.body.longURL
-  urlDatabase[shortURL] = longURL
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL;
+  urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
 });
