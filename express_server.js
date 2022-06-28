@@ -19,10 +19,6 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 //Get
 app.get("/", (req, res) => {
   res.send("hello");
@@ -60,5 +56,9 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString()
   const longURL = req.body.longURL
   urlDatabase[shortURL] = longURL
-  res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
