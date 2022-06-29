@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -10,6 +11,7 @@ const urlDatabase = {
 
 //Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 //View engine
 app.set("view engine", "ejs");
@@ -31,7 +33,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    username: req.cookies.username, 
+    urls: urlDatabase 
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -59,6 +64,11 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
+});
+
+app.post("/login", (req, res) => {
+  res.cookie(req.body.username)
+  res.redirect("/urls")
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
