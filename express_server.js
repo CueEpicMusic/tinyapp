@@ -9,6 +9,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 //Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -29,27 +42,35 @@ app.listen(PORT, () => {
 
 //Get
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  res.redirect("/register");
+});
+
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+
+app.get("/login", (req, res) => {
+  res.render("login");
 });
 
 app.get("/urls", (req, res) => {
   const templateVars = {
-    username: req.cookies.username, 
-    urls: urlDatabase 
+    user: users[req.cookies.user_id],
+    urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies.username
-  }
+    user: users[req.cookies.user_id],
+  };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
-    username: req.cookies.username,
+    user: users[req.cookies.user_id],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
   };
@@ -71,13 +92,35 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username)
-  res.redirect("/urls")
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username')
-  res.redirect("/urls")
+  res.clearCookie("user_id");
+  res.redirect("/urls");
+});
+
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+  let foundUser;
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      foundUser = users[userId];
+    }
+  }
+  if (foundUser) {
+    return res.status(404).send("A user with that email already exists!");
+  }
+
+  const id = generateRandomString();
+  const newUser = {
+    id,
+    email,
+    password,
+  };
+  users[id] = newUser;
+  res.cookie("user_id", id);
+  res.redirect("/urls");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -87,6 +130,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL
+  urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 });
