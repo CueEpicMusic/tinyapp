@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
+  b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
@@ -29,7 +29,7 @@ app.use(cookieParser());
 //View engine
 app.set("view engine", "ejs");
 
-//Random string generator function
+//Helper function
 const generateRandomString = () => {
   let r = Math.random().toString(36).substring(2, 8);
   return r;
@@ -46,17 +46,25 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id],
-  };
-  res.render("register", templateVars);
+  if (users[req.cookies.user_id]) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id],
+    };
+    res.render("register", templateVars);
+  }
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id],
-  };
-  res.render("login", templateVars);
+  if (users[req.cookies.user_id]) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id],
+    };
+    res.render("login", templateVars);
+  }
 });
 
 app.get("/urls", (req, res) => {
@@ -68,10 +76,14 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id],
-  };
-  res.render("urls_new", templateVars);
+  if (users[req.cookies.user_id]) {
+    const templateVars = {
+      user: users[req.cookies.user_id],
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -113,7 +125,7 @@ app.post("/register", (req, res) => {
   }
 
   if (foundUser) {
-    return res.status(404).send("A user with that email already exists!");
+    return res.status(403).send("A user with that email already exists!");
   }
 
   const id = generateRandomString();
@@ -124,9 +136,6 @@ app.post("/register", (req, res) => {
   };
   users[id] = newUser;
 
-  if (users[id].email.length === 0 || users[id].password.length === 0) {
-    return res.status(404).send("Please enter a email or password!");
-  }
   res.redirect("/login");
 });
 
@@ -141,13 +150,13 @@ app.post("/login", (req, res) => {
   }
 
   if (!foundUser) {
-    return res.status(404).send("No user with that email found!")
+    return res.status(403).send("No user with that email found!");
   }
 
   if (foundUser.password !== password) {
-    return res.status(400).send("Incorrect password!")
+    return res.status(403).send("Incorrect password!");
   }
-  res.cookie("user_id", foundUser.id)
+  res.cookie("user_id", foundUser.id);
   res.redirect("/urls");
 });
 
