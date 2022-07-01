@@ -9,10 +9,13 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
+        <div class="form-inline">
       <% if(!user){ %>
-        <form class="form-inline" method="POST" action="/login">
-          <input class="form-control mr-sm-2" type="text" placeholder="Sign in" name="email">
-          <button type="submit" class="btn btn-outline-secondary">Submit</button>
+        <form class="form-inline" method="GET" action="/register">
+          <button type="submit" class="btn btn-outline-secondary mr-1">Register</button>          
+        </form>
+        <form class="form-inline" method="GET" action="/login">
+          <button type="submit" class="btn btn-outline-secondary">Login</button>
         </form>
       <% } else { %>  
         <form class="form-inline" method="POST" action="/logout">
@@ -20,6 +23,7 @@
           <button type="submit" class="btn btn-outline-secondary">Logout</button>
         </form>
      <% } %>
+      </div>
     </div>
   </nav>
 </header>

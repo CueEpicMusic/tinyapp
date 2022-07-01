@@ -42,15 +42,21 @@ app.listen(PORT, () => {
 
 //Get
 app.get("/", (req, res) => {
-  res.redirect("/register");
+  res.redirect("/urls");
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  const templateVars = {
+    user: users[req.cookies.user_id],
+  };
+  res.render("register", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  const templateVars = {
+    user: users[req.cookies.user_id],
+  };
+  res.render("login", templateVars);
 });
 
 app.get("/urls", (req, res) => {
@@ -91,10 +97,6 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/login", (req, res) => {
-  res.redirect("/urls");
-});
-
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
@@ -102,12 +104,14 @@ app.post("/logout", (req, res) => {
 
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
+
   let foundUser;
   for (const userId in users) {
     if (users[userId].email === email) {
       foundUser = users[userId];
     }
   }
+
   if (foundUser) {
     return res.status(404).send("A user with that email already exists!");
   }
@@ -119,7 +123,31 @@ app.post("/register", (req, res) => {
     password,
   };
   users[id] = newUser;
-  res.cookie("user_id", id);
+
+  if (users[id].email.length === 0 || users[id].password.length === 0) {
+    return res.status(404).send("Please enter a email or password!");
+  }
+  res.redirect("/login");
+});
+
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  let foundUser;
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      foundUser = users[userId];
+    }
+  }
+
+  if (!foundUser) {
+    return res.status(404).send("No user with that email found!")
+  }
+
+  if (foundUser.password !== password) {
+    return res.status(400).send("Incorrect password!")
+  }
+  res.cookie("user_id", foundUser.id)
   res.redirect("/urls");
 });
 
