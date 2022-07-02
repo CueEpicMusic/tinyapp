@@ -194,7 +194,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("No user with that email found!");
   }
 
-  if (!bcrypt.compareSync(foundUser.password, password)) {
+  if (bcrypt.compareSync(foundUser.password, password)) {
     return res.status(403).send("Incorrect password!");
   }
   req.session.user_id = foundUser.id;
