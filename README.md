@@ -5,7 +5,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 ## Final Product
 
 Welcome to registration page! To navigate here simply press the register button on the top right corner of the page, or if you are registered, you can login instead.
-!["Registration page"](./pictures/register-page.png)
+!["Registration page"](./pictures/registeration-page.png)
 
 After logging in, you will be directed to the main page where your shortURLs will be stored.
 !["Main page"](./pictures/main-page.png)
