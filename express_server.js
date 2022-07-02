@@ -41,6 +41,16 @@ const generateRandomString = () => {
   return r;
 };
 
+const urlsForUser = (id) => {
+  let finalObj = {};
+  for (const shortUrl in urlDatabase) {
+    if (id === urlDatabase[shortUrl].userID) {
+      finalObj[shortUrl] = urlDatabase[shortUrl];
+    }
+  }
+  return finalObj;
+};
+
 //Port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -75,17 +85,16 @@ app.get("/login", (req, res) => {
 
 app.get("/urls", (req, res) => {
   let userId = req.cookies.user_id;
-  let finalObj = {};
-  for (const shortUrl in urlDatabase) {
-    if (userId === urlDatabase[shortUrl].userID) {
-      finalObj[shortUrl] = urlDatabase[shortUrl];
-    }
+  if (users[userId]) {
+    let finalObj = urlsForUser(userId)
+    const templateVars = {
+      user: users[userId],
+      urls: finalObj,
+    };
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
   }
-  const templateVars = {
-    user: users[userId],
-    urls: finalObj,
-  };
-  res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
@@ -100,7 +109,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (users[req.cookies.user_id]) {
+  if (users[req.cookies.user_id] === urlDatabase[req.params.shortURL].userID) {
     const templateVars = {
       user: users[req.cookies.user_id],
       shortURL: req.params.shortURL,
@@ -186,12 +195,20 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
+  if (users[req.cookies.user_id] === urlDatabase[req.params.shortURL].userID) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  } else {
+    return res.status(403).send("You do not have permission to delete!");
+  }
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-  res.redirect("/urls");
+  if (users[req.cookies.user_id] === urlDatabase[req.params.shortURL].userID) {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    return res.status(403).send("You do not have permission to update!");
+  }
 });
