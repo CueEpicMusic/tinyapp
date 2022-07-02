@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 
 const urlDatabase = {
   b2xVn2: {
@@ -51,42 +52,29 @@ const urlsForUser = (id) => {
   return finalObj;
 };
 
+const getUserByEmail = (email) => {
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return null;
+};
+
 //Port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Get
+
 app.get("/", (req, res) => {
   res.redirect("/urls");
-});
-
-app.get("/register", (req, res) => {
-  if (users[req.cookies.user_id]) {
-    res.redirect("/urls");
-  } else {
-    const templateVars = {
-      user: users[req.cookies.user_id],
-    };
-    res.render("register", templateVars);
-  }
-});
-
-app.get("/login", (req, res) => {
-  if (users[req.cookies.user_id]) {
-    res.redirect("/urls");
-  } else {
-    const templateVars = {
-      user: users[req.cookies.user_id],
-    };
-    res.render("login", templateVars);
-  }
 });
 
 app.get("/urls", (req, res) => {
   let userId = req.cookies.user_id;
   if (users[userId]) {
-    let finalObj = urlsForUser(userId)
+    let finalObj = urlsForUser(userId);
     const templateVars = {
       user: users[userId],
       urls: finalObj,
@@ -109,7 +97,8 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (users[req.cookies.user_id] === urlDatabase[req.params.shortURL].userID) {
+  if (users[req.cookies.user_id].id === urlDatabase[req.params.shortURL].userID) {
+    console.log("hello")
     const templateVars = {
       user: users[req.cookies.user_id],
       shortURL: req.params.shortURL,
@@ -131,8 +120,8 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-//Post
 app.post("/urls", (req, res) => {
+  console.log("this is post")
   const userID = req.cookies.user_id;
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
@@ -143,20 +132,42 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
+app.post("/urls/:shortURL", (req, res) => {
+  if (users[req.cookies.user_id].id === urlDatabase[req.params.shortURL].userID) {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    return res.status(403).send("You do not have permission to update!");
+  }
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  if (users[req.cookies.user_id].id === urlDatabase[req.params.shortURL].userID) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  } else {
+    return res.status(403).send("You do not have permission to delete!");
+  }
+});
+
+app.get("/register", (req, res) => {
+  if (users[req.cookies.user_id]) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id],
+    };
+    res.render("register", templateVars);
+  }
 });
 
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
-  let foundUser;
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      foundUser = users[userId];
-    }
-  }
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  const foundUser = getUserByEmail(email);
 
   if (foundUser) {
     return res.status(403).send("A user with that email already exists!");
@@ -166,49 +177,52 @@ app.post("/register", (req, res) => {
   const newUser = {
     id,
     email,
-    password,
+    password: hashedPassword,
   };
   users[id] = newUser;
 
   res.redirect("/login");
 });
 
+app.get("/login", (req, res) => {
+  if (users[req.cookies.user_id]) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id],
+    };
+    res.render("login", templateVars);
+  }
+});
+
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  let foundUser;
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      foundUser = users[userId];
-    }
-  }
+  const foundUser = getUserByEmail(email);
 
   if (!foundUser) {
     return res.status(403).send("No user with that email found!");
   }
 
-  if (foundUser.password !== password) {
+  if (bcrypt.compareSync(foundUser.password, password)) {
     return res.status(403).send("Incorrect password!");
   }
   res.cookie("user_id", foundUser.id);
   res.redirect("/urls");
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
-  if (users[req.cookies.user_id] === urlDatabase[req.params.shortURL].userID) {
-    const shortURL = req.params.shortURL;
-    delete urlDatabase[shortURL];
-    res.redirect("/urls");
-  } else {
-    return res.status(403).send("You do not have permission to delete!");
-  }
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  res.redirect("/urls");
 });
 
-app.post("/urls/:shortURL", (req, res) => {
-  if (users[req.cookies.user_id] === urlDatabase[req.params.shortURL].userID) {
-    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-    res.redirect("/urls");
-  } else {
-    return res.status(403).send("You do not have permission to update!");
-  }
-});
+
+
+
+
+
+
+
+
+
+
