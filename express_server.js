@@ -51,6 +51,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+//Get
 app.get("/", (req, res) => {
   res.redirect("/urls");
 });
@@ -66,6 +67,28 @@ app.get("/urls", (req, res) => {
     res.render("urls_index", templateVars);
   } else {
     res.redirect("/login");
+  }
+});
+
+app.get("/register", (req, res) => {
+  if (users[req.session.user_id]) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: users[req.session.user_id],
+    };
+    res.render("register", templateVars);
+  }
+});
+
+app.get("/login", (req, res) => {
+  if (users[req.session.user_id]) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: users[req.session.user_id],
+    };
+    res.render("login", templateVars);
   }
 });
 
@@ -105,6 +128,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+//Post
 app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
   const shortURL = generateRandomString();
@@ -139,17 +163,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-app.get("/register", (req, res) => {
-  if (users[req.session.user_id]) {
-    res.redirect("/urls");
-  } else {
-    const templateVars = {
-      user: users[req.session.user_id],
-    };
-    res.render("register", templateVars);
-  }
-});
-
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
@@ -172,17 +185,6 @@ app.post("/register", (req, res) => {
   res.redirect("/login");
 });
 
-app.get("/login", (req, res) => {
-  if (users[req.session.user_id]) {
-    res.redirect("/urls");
-  } else {
-    const templateVars = {
-      user: users[req.session.user_id],
-    };
-    res.render("login", templateVars);
-  }
-});
-
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -192,7 +194,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("No user with that email found!");
   }
 
-  if (bcrypt.compareSync(foundUser.password, password)) {
+  if (!bcrypt.compareSync(foundUser.password, password)) {
     return res.status(403).send("Incorrect password!");
   }
   req.session.user_id = foundUser.id;

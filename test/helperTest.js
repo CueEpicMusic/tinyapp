@@ -2,6 +2,17 @@ const { assert } = require("chai");
 
 const { getUserByEmail } = require("../helpers.js");
 
+const testUrlDatabase = {
+  b2xVn2: {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "aJ48lW",
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "aJ48lW",
+  },
+};
+
 const testUsers = {
   userRandomID: {
     id: "userRandomID",
