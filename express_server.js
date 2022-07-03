@@ -181,8 +181,9 @@ app.post("/register", (req, res) => {
     password: hashedPassword,
   };
   users[id] = newUser;
+  req.session.user_id = users[id].id
 
-  res.redirect("/login");
+  res.redirect("/urls");
 });
 
 app.post("/login", (req, res) => {
@@ -198,6 +199,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Incorrect password!");
   }
   req.session.user_id = foundUser.id;
+
   res.redirect("/urls");
 });
 
